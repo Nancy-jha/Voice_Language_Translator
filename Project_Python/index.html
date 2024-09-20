@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Voice-Based Translator</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Voice-Based Translator</h1>
+        <button id="recordButton">Record</button>
+        <select id="languageSelect">
+            <option value="en">English</option>
+            <option value="es">Spanish</option>
+            <option value="fr">French</option>
+            <option value="de">German</option>
+            <option value="hi">Hindi</option>
+        </select>
+        <div id="translatedText"></div>
+    </div>
+
+    <script>
+        const recognition = new webkitSpeechRecognition();
+        recognition.lang = 'en-US'; // Set the default language
+
+        const recordButton = document.getElementById('recordButton');
+        const languageSelect = document.getElementById('languageSelect');
+        const translatedTextElement = document.getElementById('translatedText');
+
+        recordButton.addEventListener('click', () => {
+            if (recognition.onstart) {
+                recognition.stop();
+                recordButton.textContent = 'Click';
+            } else {
+                recognition.start();
+                recordButton.textContent = 'Click';
+            }
+        });
+
+        recognition.onresult = (event) => {
+            const transcript = event.results[event.results.length - 1][0].transcript;
+            const targetLanguage = languageSelect.value;
+
+            // Use Google Translate API (replace with your API key if using a paid service)
+            fetch(`https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl=${targetLanguage}&dt=t&q=${encodeURIComponent(transcript)}`)
+                .then(response => response.json())
+                .then(data => {
+                    const translatedText = data[0][0][0];
+                    translatedTextElement.textContent = translatedText;
+
+                    // Use speech synthesis
+                    const utterance = new SpeechSynthesisUtterance(translatedText);
+                    utterance.lang = targetLanguage;
+                    speechSynthesis.speak(utterance);
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    translatedTextElement.textContent = 'Translation failed.';
+                });
+        };
+
+        recognition.onerror = (event) => {
+            console.error('Error:', event.error);
+        };
+    </script>
+</body>
+</html>
